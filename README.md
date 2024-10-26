@@ -2,6 +2,20 @@
 
 This project sets up a webhook receiver on your Mac to trigger Raycast's confetti effect when specific events occur in remote applications like Todoist, Pipedrive, or Height.app. Using **Cloudflare Tunnel**, you can establish a persistent, secure URL to make the server accessible from anywhere without exposing your local network directly.
 
+## Table of contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Setup instructions](#setup-instructions)
+  - [Install dependencies](#install-dependencies)
+  - [Set up Cloudflare tunnel](#set-up-cloudflare-tunnel)
+  - [Configure webhooks in external servies on a remote server](#configure-webhooks-in-external-servies-on-a-remote-server)
+  - [Testing the Setup](#testing-the-setup)
+  - [Automatically starting the server on macos](#automatically-starting-the-server-on-macos)
+  - [Automatically starting cloudflared on macos](#automatically-starting-cloudflared-on-macos)
+- [License](#license)
+- [Author](#author)
+
 ## Features
 
 - Triggers Raycast confetti when receiving specific webhooks
@@ -106,7 +120,7 @@ Cloudflare Tunnel allows you to create a stable and secure public URL for your l
 
 ### Configure webhooks in external servies on a remote server
 
-Please look at the repo [raycast-confetti](https://github.com/ronilaukkarinen/raycast-confetti) for more information on how to set up webhooks in Todoist, Pipedrive, or Height.app.
+Please look at the repo [raycast-confetti-server](https://github.com/ronilaukkarinen/raycast-confetti-server) for more information on how to set up webhooks in Todoist, Pipedrive, or Height.app.
 
 ### Testing the Setup
 
@@ -118,6 +132,88 @@ Please look at the repo [raycast-confetti](https://github.com/ronilaukkarinen/ra
    ```
 
 3. If everything is set up correctly, Raycast's confetti effect should trigger on your Mac.
+
+### Automatically starting the server on macos
+
+To have the `raycast-confetti-receiver` server start automatically in the background on macOS, use `launchd`:
+
+1. **Create a `launchd` plist file**:
+
+   ```bash
+   nano ~/Library/LaunchAgents/com.rolle.raycast-confetti-receiver.plist
+   ```
+
+   Add the following configuration:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+       <key>Label</key>
+       <string>com.rolle.raycast-confetti-receiver</string>
+
+       <key>ProgramArguments</key>
+       <array>
+           <string>/usr/local/bin/node</string>
+           <string>/path/to/your/project/confetti-server.mjs</string>
+       </array>
+
+       <key>RunAtLoad</key>
+       <true/>
+       <key>KeepAlive</key>
+       <true/>
+   </dict>
+   </plist>
+   ```
+
+2. **Load the service**:
+
+   ```bash
+   launchctl load ~/Library/LaunchAgents/com.rolle.raycast-confetti-receiver.plist
+   ```
+
+### Automatically starting cloudflared on macos
+
+To start Cloudflare Tunnel (`cloudflared`) automatically in the background on macOS, create a `launchd` plist file:
+
+1. **Create the `launchd` plist file**:
+
+   ```bash
+   nano ~/Library/LaunchAgents/com.rolle.cloudflared.plist
+   ```
+
+   Add the following configuration:
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+       <key>Label</key>
+       <string>com.rolle.cloudflared</string>
+
+       <key>ProgramArguments</key>
+       <array>
+           <string>/opt/homebrew/bin/cloudflared</string>
+           <string>tunnel</string>
+           <string>run</string>
+           <string>raycast-confetti</string>
+       </array>
+
+       <key>RunAtLoad</key>
+       <true/>
+       <key>KeepAlive</key>
+       <true/>
+   </dict>
+   </plist>
+   ```
+
+2. **Load the service**:
+
+   ```bash
+   launchctl load ~/Library/LaunchAgents/com.rolle.cloudflared.plist
+   ```
 
 ### License
 
